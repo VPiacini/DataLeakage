@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+
+# Resultados gerados pelos testes (main.py) — reprodutíveis, não precisam ir pro repo
+*.csv
+*.png
+
+# Gráficos e tabelas gerados por analyze_results.py
+MARCS/
