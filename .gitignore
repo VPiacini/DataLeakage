@@ -1,9 +1,41 @@
-__pycache__/
-*.pyc
+# ---------------------------------------------------------------------------
+# Este repositório versiona apenas o necessário para REPLICAR o experimento:
+# código, requirements.txt e README.md. Tudo que é gerado ao rodar os testes
+# fica de fora — é reprodutível com `python main.py <teste>`.
+# ---------------------------------------------------------------------------
 
-# Resultados gerados pelos testes (main.py) — reprodutíveis, não precisam ir pro repo
-*.csv
+# Resultados dos experimentos (main.py)
+results/
+*_results.csv
+
+# Gráficos e tabelas resumo (analyze_results.py)
+plots/
 *.png
 
-# Gráficos e tabelas gerados por analyze_results.py
+# Cache dos datasets baixados do PMLB
+cache/
+*.tsv.gz
+
+# Artefatos de escrita (artigo, TCC) — não fazem parte da replicação
+*.pdf
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+
+# Ambientes virtuais
+.venv/
+venv/
+env/
+
+# Sistema operacional / editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+#Arquivos diferentes
 MARCS/

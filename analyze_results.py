@@ -29,7 +29,7 @@ Para cada teste, o script produz:
 USO
 ----
     python analyze_results.py
-    python analyze_results.py --input-dir . --output-dir plots
+    python analyze_results.py --input-dir results --output-dir plots
     python analyze_results.py --tests normalization imputation
 
 Por padrao, procura os quatro .csv em ./results/ (mesma pasta onde
