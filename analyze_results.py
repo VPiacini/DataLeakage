@@ -23,7 +23,16 @@ Para cada teste, o script produz:
   2. Um "grafico de gap": a diferenca media (leak - noleak) de cada
      metrica, por algoritmo -- e a forma mais direta de visualizar o
      quanto o vazamento infla artificialmente a performance relatada.
-  3. Uma tabela resumo (.csv) com media e desvio padrao de cada
+  3. Um grafico de linha da propria metrica (nao o delta) x tamanho do
+     dataset, comparando leak x noleak diretamente (plot_error_vs_size).
+  4. Dois graficos de "efeito x tamanho": dispersao do delta (com - sem
+     vazamento) de cada metrica contra o numero de instancias do dataset
+     (escala log), com uma tendencia media (parabola, grau <= 2) ajustada
+     em escala symlog -- uma versao com um ponto por par dataset+algoritmo
+     (plot_leakage_delta_vs_size_por_alg) e outra com um ponto por
+     dataset, ja agregando os algoritmos (plot_leakage_delta_vs_size_por_dataset).
+     Datasets ausentes de DATASET_SIZES sao ignorados nesses dois graficos.
+  5. Uma tabela resumo (.csv) com media e desvio padrao de cada
      metrica, por grupo (ds, alg, leak, [variavel extra]).
 
 USO
@@ -44,8 +53,11 @@ import os
 import matplotlib
 matplotlib.use("Agg")  # gera os arquivos sem precisar de tela/display
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.scale import SymmetricalLogTransform
+from scipy.stats import spearmanr
 
 sns.set_theme(style="whitegrid")
 
@@ -279,6 +291,152 @@ def plot_error_vs_size(df, metric, test_name, outdir):
     print(f"  salvo: {path}")
 
 
+def _paired_delta_by_size(df, metric, extra_facets):
+    """Pareia leak/noleak por (ds, alg, iteration, extra_facets) e calcula
+    o delta (com vazamento - sem vazamento) de `metric` para cada
+    combinacao -- o mesmo tipo de pareamento usado nos graficos de "gap",
+    mas mantendo uma linha por combinacao (em vez de ja agregar por
+    algoritmo). Mapeia o tamanho de cada dataset via DATASET_SIZES e
+    descarta datasets sem tamanho conhecido. Devolve None se faltar
+    algum dos dois cenarios ou nenhum dataset tiver tamanho conhecido."""
+    if metric not in df.columns or "ds" not in df.columns or "alg" not in df.columns:
+        return None
+    if "leak" not in df.columns or "iteration" not in df.columns:
+        return None
+
+    id_cols = [c for c in (["ds", "alg", "iteration"] + extra_facets) if c in df.columns]
+    piv = df.pivot_table(index=id_cols, columns="leak", values=metric, aggfunc="first")
+    if "Com vazamento" not in piv.columns or "Sem vazamento" not in piv.columns:
+        return None
+
+    piv = piv.reset_index()
+    piv["delta"] = piv["Com vazamento"] - piv["Sem vazamento"]
+    piv["n_instances"] = piv["ds"].map(DATASET_SIZES)
+    piv = piv.dropna(subset=["n_instances", "delta"])
+    return piv if not piv.empty else None
+
+
+def _symlog_quad_trend(x, y):
+    """Ajusta uma tendencia MEDIA (parabola, grau <= 2, minimos quadrados)
+    entre log10(x) e y, trabalhando no mesmo espaco "symlog" em que o eixo
+    y sera desenhado -- assim a curva aparece como uma parabola de fato no
+    grafico, mesmo com y passando perto de zero. O limiar da regiao linear
+    do symlog (linthresh) e o percentil 10 dos valores absolutos NAO-NULOS
+    de y: ancora a regiao linear nos menores efeitos observados e deixa a
+    maior parte dos pontos na regiao log. Devolve (xs, ys, linthresh),
+    prontos para plt.plot() e para configurar o proprio eixo."""
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+    nz = np.abs(y[y != 0])
+    linthresh = max(np.percentile(nz, 10), 1e-12) if nz.size else 1e-6
+
+    tr = SymmetricalLogTransform(10, linthresh, 1)
+    deg = min(2, len(np.unique(x)) - 1)
+    coef = np.polyfit(np.log10(x), tr.transform(y), deg)
+    xs = np.logspace(np.log10(x.min()), np.log10(x.max()), 200)
+    ys = tr.inverted().transform(np.polyval(coef, np.log10(xs)))
+    return xs, ys, linthresh
+
+
+def plot_leakage_delta_vs_size_por_alg(df, metric, test_name, outdir, extra_facets):
+    """Grafico "efeito x tamanho" (versao 1): dispersao do delta (com -
+    sem vazamento) de `metric`, um ponto por par (dataset, algoritmo) --
+    media entre iteracoes e niveis extras (perc, imputer, perc-miss).
+    Colorido por algoritmo. Eixo x = n_instancias (escala log), eixo y em
+    escala symlog (os efeitos variam de ~1e-6 a ~1e-1). A linha preta e
+    uma tendencia media (parabola, grau <= 2) ajustada no espaco symlog do
+    eixo y. O texto no canto mostra a correlacao de Spearman entre o
+    delta e n_instancias, como referencia rapida da forca da relacao."""
+    piv = _paired_delta_by_size(df, metric, extra_facets)
+    if piv is None:
+        return
+
+    g = (piv.groupby(["ds", "alg"], as_index=False)
+            .agg(delta=("delta", "mean"), n_instances=("n_instances", "first")))
+    if g["ds"].nunique() < 4:
+        print(f"  [aviso] poucos datasets com tamanho conhecido para {test_name}/{metric}, pulando grafico de tamanho")
+        return
+
+    algs = sorted(g["alg"].unique())
+    palette = dict(zip(algs, sns.color_palette("deep", len(algs))))
+
+    fig, ax = plt.subplots(figsize=(7.5, 5.5))
+    for a in algs:
+        s = g[g["alg"] == a]
+        ax.scatter(s["n_instances"], s["delta"], label=a, color=palette[a],
+                   s=45, alpha=.85, edgecolor="white", linewidth=.5, zorder=3)
+
+    xs, ys, linthresh = _symlog_quad_trend(g["n_instances"], g["delta"])
+    ax.plot(xs, ys, color="black", lw=2.2, zorder=4, label="Tendencia (ajuste quadratico)")
+    ax.axhline(0, color="grey", lw=.8, zorder=1)
+
+    rho, p = spearmanr(g["delta"], g["n_instances"])
+    ax.text(.97, .97, f"Spearman rho = {rho:+.2f}\np = {p:.3g}",
+            transform=ax.transAxes, ha="right", va="top", fontsize=9,
+            bbox=dict(boxstyle="round", fc="white", ec="lightgrey"))
+
+    ax.set_xscale("log")
+    ax.set_yscale("symlog", linthresh=linthresh)
+    ax.set_xlabel("Numero de instancias do dataset (escala log)")
+    ax.set_ylabel(f"delta {METRICS.get(metric, metric)}\n(com - sem vazamento) [escala symlog]")
+    ax.set_title(f"{test_name} -- efeito do vazamento x tamanho do dataset (por algoritmo)")
+    ax.legend(loc="lower center", bbox_to_anchor=(.5, -.32), ncol=min(6, len(algs) + 1), frameon=False)
+    fig.tight_layout()
+
+    fname = f"{test_name}_{metric}_delta_vs_tamanho_alg.png"
+    path = os.path.join(outdir, fname)
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  salvo: {path}")
+
+
+def plot_leakage_delta_vs_size_por_dataset(df, metric, test_name, outdir, extra_facets):
+    """Grafico "efeito x tamanho" (versao 2): mesma ideia da funcao
+    anterior, mas com um unico ponto por dataset -- media do delta entre
+    TODOS os algoritmos, iteracoes e niveis extras daquele dataset. Usa
+    MEDIA (nao mediana): em testes onde a maioria dos pares empata em
+    delta=0 (ex.: selecao de atributos, onde ~90% dos pares empatam), a
+    mediana por dataset ficaria sempre zero e esconderia o efeito, que so
+    aparece em alguns poucos datasets/algoritmos."""
+    piv = _paired_delta_by_size(df, metric, extra_facets)
+    if piv is None:
+        return
+
+    g = (piv.groupby("ds", as_index=False)
+            .agg(delta=("delta", "mean"), n_instances=("n_instances", "first")))
+    if len(g) < 4:
+        print(f"  [aviso] poucos datasets com tamanho conhecido para {test_name}/{metric}, pulando grafico de tamanho")
+        return
+
+    fig, ax = plt.subplots(figsize=(7.5, 5.5))
+    ax.scatter(g["n_instances"], g["delta"], s=55, color="#4C72B0", alpha=.85,
+               edgecolor="white", linewidth=.5, zorder=3)
+
+    xs, ys, linthresh = _symlog_quad_trend(g["n_instances"], g["delta"])
+    ax.plot(xs, ys, color="black", lw=2.2, zorder=4, label="Tendencia (ajuste quadratico)")
+    ax.axhline(0, color="grey", lw=.8, zorder=1)
+
+    rho, p = spearmanr(g["delta"], g["n_instances"])
+    ax.text(.97, .97, f"Spearman rho = {rho:+.2f}\np = {p:.3g}",
+            transform=ax.transAxes, ha="right", va="top", fontsize=9,
+            bbox=dict(boxstyle="round", fc="white", ec="lightgrey"))
+
+    ax.set_xscale("log")
+    ax.set_yscale("symlog", linthresh=linthresh)
+    ax.set_xlabel("Numero de instancias do dataset (escala log)")
+    ax.set_ylabel(f"delta {METRICS.get(metric, metric)} por dataset\n(media entre algoritmos) [escala symlog]")
+    ax.set_title(f"{test_name} -- efeito do vazamento x tamanho do dataset (por dataset)")
+    ax.legend(loc="lower center", bbox_to_anchor=(.5, -.22), frameon=False)
+    fig.tight_layout()
+
+    fname = f"{test_name}_{metric}_delta_vs_tamanho_dataset.png"
+    path = os.path.join(outdir, fname)
+    fig.savefig(path, dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  salvo: {path}")
+
+
 def save_summary_table(df, test_name, extra_facets, summaries_dir):
     """Salva uma tabela .csv com media e desvio padrao de cada
     metrica, agrupada por dataset/algoritmo/leak/(variaveis extras).
@@ -313,6 +471,8 @@ def analyze_test(test_name, cfg, input_dir, output_root, summaries_dir):
         plot_metric_boxplots(df, metric, test_name, outdir)
         plot_leakage_gap(df, metric, test_name, outdir)
         plot_error_vs_size(df, metric, test_name, outdir)
+        plot_leakage_delta_vs_size_por_alg(df, metric, test_name, outdir, cfg["extra_facets"])
+        plot_leakage_delta_vs_size_por_dataset(df, metric, test_name, outdir, cfg["extra_facets"])
         for facet in cfg["extra_facets"]:
             plot_metric_boxplots(df, metric, test_name, outdir, extra_facet=facet)
             plot_leakage_gap(df, metric, test_name, outdir, extra_facet=facet)
