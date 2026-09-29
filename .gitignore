@@ -4,14 +4,6 @@
 # fica de fora — é reprodutível com `python main.py <teste>`.
 # ---------------------------------------------------------------------------
 
-# Resultados dos experimentos (main.py)
-results/
-*_results.csv
-
-# Gráficos e tabelas resumo (analyze_results.py)
-plots/
-*.png
-
 # Cache dos datasets baixados do PMLB
 cache/
 *.tsv.gz

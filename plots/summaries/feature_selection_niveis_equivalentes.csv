@@ -1,0 +1,91 @@
+ds,alg,variavel,niveis_equivalentes,n_niveis,n_niveis_total
+1027_ESL,DT,perc,1 = 5 = 10 = 20,4,4
+1027_ESL,KNN,perc,1 = 5 = 10 = 20,4,4
+1027_ESL,LR,perc,1 = 5 = 10 = 20,4,4
+1027_ESL,RF,perc,1 = 5 = 10 = 20,4,4
+1027_ESL,SVR,perc,1 = 5 = 10 = 20,4,4
+1028_SWD,DT,perc,1 = 5 = 10,3,4
+1028_SWD,KNN,perc,1 = 5 = 10,3,4
+1028_SWD,LR,perc,1 = 5 = 10,3,4
+1028_SWD,RF,perc,1 = 5 = 10,3,4
+1028_SWD,SVR,perc,1 = 5 = 10,3,4
+1029_LEV,DT,perc,1 = 5 = 10 = 20,4,4
+1029_LEV,KNN,perc,1 = 5 = 10 = 20,4,4
+1029_LEV,LR,perc,1 = 5 = 10 = 20,4,4
+1029_LEV,RF,perc,1 = 5 = 10 = 20,4,4
+1029_LEV,SVR,perc,1 = 5 = 10 = 20,4,4
+1030_ERA,DT,perc,1 = 5 = 10 = 20,4,4
+1030_ERA,KNN,perc,1 = 5 = 10 = 20,4,4
+1030_ERA,LR,perc,1 = 5 = 10 = 20,4,4
+1030_ERA,RF,perc,1 = 5 = 10 = 20,4,4
+1030_ERA,SVR,perc,1 = 5 = 10 = 20,4,4
+1089_USCrime,DT,perc,1 = 5,2,4
+1089_USCrime,KNN,perc,1 = 5,2,4
+1089_USCrime,LR,perc,1 = 5,2,4
+1089_USCrime,RF,perc,1 = 5,2,4
+1089_USCrime,SVR,perc,1 = 5,2,4
+1096_FacultySalaries,DT,perc,1 = 5 = 10 = 20,4,4
+1096_FacultySalaries,KNN,perc,1 = 5 = 10 = 20,4,4
+1096_FacultySalaries,LR,perc,1 = 5 = 10 = 20,4,4
+1096_FacultySalaries,RF,perc,1 = 5 = 10 = 20,4,4
+1096_FacultySalaries,SVR,perc,1 = 5 = 10 = 20,4,4
+1199_BNG_echoMonths,DT,perc,1 = 5 = 10,3,4
+1199_BNG_echoMonths,KNN,perc,1 = 5 = 10,3,4
+1199_BNG_echoMonths,LR,perc,1 = 5 = 10,3,4
+1199_BNG_echoMonths,RF,perc,1 = 5 = 10,3,4
+1199_BNG_echoMonths,SVR,perc,1 = 5 = 10,3,4
+197_cpu_act,DT,perc,1 = 5,2,4
+197_cpu_act,KNN,perc,1 = 5,2,4
+197_cpu_act,LR,perc,1 = 5,2,4
+197_cpu_act,RF,perc,1 = 5,2,4
+197_cpu_act,SVR,perc,1 = 5,2,4
+218_house_8L,DT,perc,1 = 5 = 10,3,4
+218_house_8L,KNN,perc,1 = 5 = 10,3,4
+218_house_8L,LR,perc,1 = 5 = 10,3,4
+218_house_8L,RF,perc,1 = 5 = 10,3,4
+218_house_8L,SVR,perc,1 = 5 = 10,3,4
+225_puma8NH,DT,perc,1 = 5 = 10,3,4
+225_puma8NH,KNN,perc,1 = 5 = 10,3,4
+225_puma8NH,LR,perc,1 = 5 = 10,3,4
+225_puma8NH,RF,perc,1 = 5 = 10,3,4
+225_puma8NH,SVR,perc,1 = 5 = 10,3,4
+227_cpu_small,DT,perc,1 = 5,2,4
+227_cpu_small,KNN,perc,1 = 5,2,4
+227_cpu_small,LR,perc,1 = 5,2,4
+227_cpu_small,RF,perc,1 = 5,2,4
+227_cpu_small,SVR,perc,1 = 5,2,4
+503_wind,DT,perc,1 = 5,2,4
+503_wind,KNN,perc,1 = 5,2,4
+503_wind,LR,perc,1 = 5,2,4
+503_wind,RF,perc,1 = 5,2,4
+503_wind,SVR,perc,1 = 5,2,4
+529_pollen,DT,perc,1 = 5 = 10 = 20,4,4
+529_pollen,KNN,perc,1 = 5 = 10 = 20,4,4
+529_pollen,LR,perc,1 = 5 = 10 = 20,4,4
+529_pollen,RF,perc,1 = 5 = 10 = 20,4,4
+529_pollen,SVR,perc,1 = 5 = 10 = 20,4,4
+537_houses,DT,perc,1 = 5 = 10,3,4
+537_houses,KNN,perc,1 = 5 = 10,3,4
+537_houses,LR,perc,1 = 5 = 10,3,4
+537_houses,RF,perc,1 = 5 = 10,3,4
+537_houses,SVR,perc,1 = 5 = 10,3,4
+542_pollution,DT,perc,1 = 5,2,4
+542_pollution,KNN,perc,1 = 5,2,4
+542_pollution,LR,perc,1 = 5,2,4
+542_pollution,RF,perc,1 = 5,2,4
+542_pollution,SVR,perc,1 = 5,2,4
+560_bodyfat,DT,perc,1 = 5,2,4
+560_bodyfat,KNN,perc,1 = 5,2,4
+560_bodyfat,LR,perc,1 = 5,2,4
+560_bodyfat,RF,perc,1 = 5,2,4
+560_bodyfat,SVR,perc,1 = 5,2,4
+564_fried,DT,perc,1 = 5 = 10,3,4
+564_fried,KNN,perc,1 = 5 = 10,3,4
+564_fried,LR,perc,1 = 5 = 10,3,4
+564_fried,RF,perc,1 = 5 = 10,3,4
+564_fried,SVR,perc,1 = 5 = 10,3,4
+574_house_16H,DT,perc,1 = 5,2,4
+574_house_16H,KNN,perc,1 = 5,2,4
+574_house_16H,LR,perc,1 = 5,2,4
+574_house_16H,RF,perc,1 = 5,2,4
+574_house_16H,SVR,perc,1 = 5,2,4
