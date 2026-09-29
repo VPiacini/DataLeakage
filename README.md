@@ -1,5 +1,7 @@
 # Data Leakage em Pipelines de Regressão
 
+Trabalho disponível em: https://www.overleaf.com/read/knzyqktzbpms#aea558
+
 Avaliação empírica do impacto de **vazamento de dados** (*data leakage*) sobre a
 estimativa de desempenho de modelos de regressão, em quatro etapas distintas de
 um pipeline de Machine Learning: normalização, imputação de valores faltantes,
