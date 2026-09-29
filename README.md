@@ -19,26 +19,6 @@ quanto o vazamento infla artificialmente a performance reportada.
 
 ---
 
-## Requisitos
-
-- Python 3.10+
-- Dependências fixadas em `requirements.txt` (scikit-learn 1.6.1, pmlb 1.0.1,
-  pandas, numpy, scipy, torch, matplotlib, seaborn)
-
-O `torch` é usado apenas por `utils.py`, na geração dos mecanismos de dados
-faltantes MAR/MNAR. Não há treino em GPU em nenhum ponto do projeto.
-
-## Instalação
-
-```bash
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-Os datasets são baixados automaticamente do PMLB na primeira execução
-(`pmlb.fetch_data`), portanto a primeira rodada exige conexão com a internet.
-
 ## Execução
 
 Cada teste é disparado separadamente:
@@ -49,6 +29,7 @@ python main.py imputation
 python main.py feature_selection
 python main.py tuning
 ```
+ou bash run_all_tests.sh
 
 Os resultados são gravados de forma **incremental** em `results/<teste>_results.csv`
 — uma linha por (dataset × algoritmo × repetição × cenário) e demais fatores do
@@ -89,20 +70,7 @@ DATASETS=1089_USCrime,505_tecator ALGS=SVR NUM_TRIALS=3 python main.py normaliza
 ## Datasets
 
 20 datasets de regressão do PMLB, listados em `model_utils.py` **ordenados por
-número de instâncias** (47 a 22.784 linhas). A lista cobre desde datasets muito
-pequenos, onde o efeito do vazamento tende a ser mais visível, até um caso de
-alta dimensionalidade relativa (`505_tecator`, 240 linhas × 124 atributos).
-
-Observações sobre a composição da lista:
-
-- `529_pollen`, `225_puma8NH` e `1199_BNG_echoMonths` são **sintéticos** (gerados
-  por simulação ou, no último caso, por um *Bayesian Network Generator*). Os
-  demais são dados reais.
-- `574_house_16H` foi removido por ser redundante: mesma base (censo dos EUA de
-  1990) e mesmas 22.784 linhas de `218_house_8L`, apenas com um subconjunto de
-  atributos escolhido artificialmente.
-- `228_elevators` e `573_house_16L` não existem mais no PMLB 1.0; `fetch_data`
-  falharia para eles.
+número de instâncias** (47 a 22.784 linhas).
 
 ## Os quatro experimentos
 
@@ -168,15 +136,6 @@ Gera, por teste, em `plots/<teste>/`:
   verificar se o viés cresce em datasets menores
 - **Tabelas resumo** em `plots/summaries/`
 
-> MAE, MSE e RMSE são medidos na escala original do alvo e **não são comparáveis
-> entre datasets** com alvos de magnitudes diferentes. Para a leitura entre
-> datasets — em particular no gráfico de erro × tamanho — use o **R²**, que é
-> adimensional.
-
-O dicionário `DATASET_SIZES`, em `analyze_results.py`, guarda o `n_instances` de
-cada dataset e precisa ser atualizado manualmente sempre que a lista em
-`model_utils.py` mudar.
-
 ## Estrutura
 
 ```
@@ -194,14 +153,6 @@ plots/                  gráficos gerados (ignorados pelo git)
 
 `results/` e `plots/` ficam fora do controle de versão: são inteiramente
 reprodutíveis a partir do código e das instruções acima.
-
-## Custo computacional
-
-`normalization` e `feature_selection` rodam em tempo moderado na lista completa.
-`tuning` e `imputation` são substancialmente mais caros — o gargalo é o SVR em
-datasets grandes e o `KNNImputer` com percentuais altos de valores faltantes.
-Para essas duas, use `RESUME=1` e, se necessário, fatie a execução com `DATASETS`
-e `ALGS`.
 
 ## Créditos
 
