@@ -1,0 +1,119 @@
+\documentclass[ecp,tc,english]{infufrgs}
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{rotating}     
+\usepackage{array}
+\usepackage{amsmath}
+\usepackage{microtype}
+\setlength{\emergencystretch}{2em}
+
+% -------------------- Metadados --------------------
+\title{Assessing the Impact of Data Leakage in Machine Learning Pipelines for Regression Tasks}
+\translatedtitle{Avaliacao do Impacto do Vazamento de Dados em Pipelines de Aprendizado de Maquina para Tarefas de Regressao}
+
+\author{Piacini}{Vinicius}
+
+\advisor[Profa.~Dra.]{Recamonde-Mendoza}{Mariana}
+
+% Data da defesa (padrao: mes e ano atuais)
+% \date{dezembro}{2026}
+
+% -------------------- Palavras-chave --------------------
+\keyword{Data Leakage}
+\keyword{Regression Analysis}
+\keyword{Machine Learning Evaluation}
+\keyword{Model Assessment}
+
+\translatedkeyword{Vazamento de Dados}
+\translatedkeyword{Analise de Regressao}
+\translatedkeyword{Avaliacao de Aprendizado de Maquina}
+\translatedkeyword{Estimativa de Desempenho}
+
+\begin{document}
+
+\maketitle
+
+% -------------------- Elementos pre-textuais --------------------
+% \begin{dedicatoria}
+%   ...
+% \end{dedicatoria}
+
+% \begin{agradecimentos}
+%   ...
+% \end{agradecimentos}
+
+\begin{abstract}
+Reliable estimates of generalization performance are essential to assess machine
+learning models, but they depend on a strict separation between the data used to
+build a model and the data used to evaluate it. Data leakage breaks this
+separation and may produce overly optimistic results without any visible sign.
+Although the problem is widely discussed, there is little systematic evidence on
+how different sources of leakage affect regression models. This work
+investigates leakage introduced at four steps of a machine learning pipeline:
+normalization, missing value imputation, feature selection, and hyperparameter
+tuning. Using a paired design, leakage-free and leakage-prone pipelines were
+evaluated on the same data partitions for 21 regression data sets from the Penn
+Machine Learning Benchmarks and five algorithms (linear regression, k-nearest
+neighbors, decision trees, random forests, and support vector regression),
+totaling 11,340 paired comparisons analyzed with $R^2$, RMSE, and non-parametric
+statistical tests. % Resultados omitidos nesta versao (capitulos 5 e 6 em construcao).
+\end{abstract}
+
+\begin{translatedabstract}
+Estimativas confi\'aveis do desempenho de generaliza\c{c}\~ao s\~ao essenciais para
+avaliar modelos de aprendizado de m\'aquina, mas dependem de uma separa\c{c}\~ao
+estrita entre os dados usados para construir um modelo e os dados usados para
+avali\'a-lo. O vazamento de dados rompe essa separa\c{c}\~ao e pode produzir
+resultados excessivamente otimistas sem nenhum sinal vis\'ivel. Embora o
+problema seja amplamente discutido, h\'a pouca evid\^encia sistem\'atica sobre
+como diferentes fontes de vazamento afetam modelos de regress\~ao. Este trabalho
+investiga o vazamento introduzido em quatro etapas de um pipeline de
+aprendizado de m\'aquina: normaliza\c{c}\~ao, imputa\c{c}\~ao de valores
+faltantes, sele\c{c}\~ao de atributos e ajuste de hiperpar\^ametros. Com um
+desenho pareado, pipelines com e sem vazamento foram avaliados sobre as mesmas
+parti\c{c}\~oes de dados em 21 conjuntos de dados de regress\~ao do Penn Machine
+Learning Benchmarks e cinco algoritmos (regress\~ao linear, k vizinhos mais
+pr\'oximos, \'arvores de decis\~ao, florestas aleat\'orias e regress\~ao por
+vetores de suporte), totalizando 11.340 compara\c{c}\~oes pareadas analisadas
+com $R^2$, RMSE e testes estat\'isticos n\~ao param\'etricos. % Resultados omitidos nesta versao (capitulos 5 e 6 em construcao).
+\end{translatedabstract}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+\begin{listofabbrv}{RMSE}
+  \item[CV]   Cross-Validation
+  \item[DL]   Data Leakage
+  \item[DT]   Decision Tree
+  \item[KNN]  K-Nearest Neighbors
+  \item[LR]   Linear Regression
+  \item[MAE]  Mean Absolute Error
+  \item[MAR]  Missing At Random
+  \item[MCAR] Missing Completely At Random
+  \item[ML]   Machine Learning
+  \item[MNAR] Missing Not At Random
+  \item[MSE]  Mean Squared Error
+  \item[OLS]  Ordinary Least Squares
+  \item[PMLB] Penn Machine Learning Benchmarks
+  \item[RBF]  Radial Basis Function
+  \item[RF]   Random Forest
+  \item[RMSE] Root Mean Squared Error
+  \item[SVR]  Support Vector Regression
+\end{listofabbrv}
+
+% -------------------- Elementos textuais --------------------
+\include{cap1-introducao}
+\include{cap2-fundamentacao}
+\include{cap3-trabalhos-relacionados}
+\include{cap4-metodologia}
+\include{cap5-cap6-em-construcao}
+
+% -------------------- Referencias --------------------
+\bibliographystyle{abntex2-alf}
+\bibliography{referencias}
+
+
+\end{document}

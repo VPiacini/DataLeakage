@@ -1,0 +1,315 @@
+\chapter{Theoretical Background}
+\label{cap:fundamentacao}
+
+This chapter presents the concepts that support the remainder of this work.
+Section~\ref{sec:fund-regressao} defines the regression task and the metrics
+used to evaluate regression models. Section~\ref{sec:fund-algoritmos} describes
+the five learning algorithms adopted in the experiments.
+Section~\ref{sec:fund-pipeline} presents the pipeline steps investigated in this
+study and the procedures used to estimate model performance.
+Section~\ref{sec:fund-vazamento} discusses how data leakage may arise in each of
+these steps. Finally, Section~\ref{sec:fund-estatistica} describes the
+statistical tests used in the analysis of the results.
+
+\section{Regression and Its Evaluation}
+\label{sec:fund-regressao}
+
+In supervised learning, a model is trained from a set of instances for which the
+expected output is known. Each instance is described by a vector of input
+features $\mathbf{x}$ and is associated with an output value $y$, called the
+target. The learning algorithm uses these instances to build a model capable of
+predicting the target of new instances. When the target is categorical, the task
+is called classification; when it is a continuous numerical value, such as the
+price of a property or the body fat percentage of a person, the task is called
+regression \cite{hastie2009}. This work addresses regression tasks only.
+
+The purpose of a model is to make accurate predictions for instances that were
+not available during training. A model that fits the training data very closely
+may still perform poorly on new data, a phenomenon known as overfitting.
+Therefore, model performance must be measured on data that were not used for
+training, and the result is taken as an estimate of the model's generalization
+performance, that is, of how it is expected to behave in practice.
+
+In regression, the quality of a prediction is measured by its deviation from the
+true value. Given $m$ evaluation instances with true values $y_i$ and predicted
+values $\hat{y}_i$, the four metrics adopted in this work are defined as:
+
+\begin{align}
+  \text{MAE}  &= \frac{1}{m}\sum_{i=1}^{m} \lvert y_i - \hat{y}_i \rvert, \label{eq:mae}\\
+  \text{MSE}  &= \frac{1}{m}\sum_{i=1}^{m} (y_i - \hat{y}_i)^2, \label{eq:mse}\\
+  \text{RMSE} &= \sqrt{\text{MSE}}, \label{eq:rmse}\\
+  R^2         &= 1 - \frac{\sum_{i=1}^{m} (y_i - \hat{y}_i)^2}{\sum_{i=1}^{m} (y_i - \bar{y})^2}, \label{eq:r2}
+\end{align}
+
+\noindent where $\bar{y}$ is the mean of the true values. The Mean Absolute Error
+(MAE) is the average magnitude of the errors. The Mean Squared Error (MSE)
+squares each error before averaging, so that large errors have a greater
+influence on the result. The Root Mean Squared Error (RMSE) is the square root of
+the MSE and is expressed in the same unit as the target, which makes it easier
+to interpret. For these three metrics, lower values indicate better models.
+However, they depend on the scale of the target: the same RMSE may represent a
+small error for a target measured in thousands and a large error for a target
+measured in units. Consequently, their values cannot be directly compared across
+data sets.
+
+The coefficient of determination ($R^2$) does not have this limitation. It
+measures the proportion of the variance of the target that is explained by the
+model, using as reference a baseline model that always predicts the mean of the
+target. A value of 1 corresponds to perfect predictions, a value of 0 indicates
+that the model performs as well as the baseline, and negative values indicate
+that it performs worse than the baseline. Because it is independent of the scale
+of the target, $R^2$ allows comparisons across data sets and is considered more
+informative than the other metrics for this purpose \cite{chicco2021}. For this
+reason, $R^2$ is the primary metric of this work, and RMSE is used as a
+complementary metric.
+
+\section{Regression Algorithms}
+\label{sec:fund-algoritmos}
+
+Five algorithms were considered in this work. They were selected because they
+represent different learning approaches, which may lead to different
+sensitivities to data leakage.
+
+\subsection{Linear Regression}
+
+Linear Regression (LR) models the target as a linear combination of the
+features, $\hat{y} = \beta_0 + \beta_1 x_1 + \dots + \beta_d x_d$. The
+coefficients $\beta_j$ are estimated by Ordinary Least Squares (OLS), which
+minimizes the sum of the squared errors on the training data \cite{hastie2009}.
+LR is simple, computationally efficient, and has no hyperparameters in its basic
+form. A property of LR that is relevant to this work is that its predictions do
+not change when a feature is shifted or multiplied by a constant, since the
+corresponding coefficient is adjusted accordingly. Some variants impose
+constraints on the coefficients, such as requiring all of them to be
+non-negative, and these options can be treated as hyperparameters.
+
+\subsection{K-Nearest Neighbors}
+
+The K-Nearest Neighbors (KNN) algorithm is an instance-based method: it stores
+the training data and predicts the target of a new instance as the average
+target of the $K$ training instances closest to it \cite{cover1967,hastie2009}.
+Its main hyperparameters are the number of neighbors $K$ and the distance
+function used to measure the proximity between instances, such as the
+Euclidean or the Manhattan distance. Since distances are computed directly from
+the feature values, features with larger ranges have a greater influence on the
+choice of the neighbors than features with smaller ranges. For this reason, KNN
+is highly sensitive to the scale of the features.
+
+\subsection{Decision Trees}
+
+A Decision Tree (DT) recursively divides the feature space into regions. At each
+node, the algorithm selects a feature and a threshold that split the training
+instances into two groups, choosing the split that most reduces the error of the
+predictions in the resulting groups. This process is repeated until a stopping
+criterion is met, and the prediction of each terminal node, or leaf, is the mean
+target of the training instances that reach it \cite{breiman1984}. Since each
+split only compares a feature with a threshold, decision trees are not affected
+by the scale of the features. However, a tree that grows without restrictions
+tends to overfit the training data, so its complexity is usually controlled by
+hyperparameters such as the maximum depth.
+
+\subsection{Random Forests}
+
+A Random Forest (RF) is an ensemble of decision trees whose predictions are
+averaged \cite{breiman2001}. Each tree is trained on a bootstrap sample of the
+training instances and, at each node, considers only a random subset of the
+features. This randomness makes the trees different from each other, and
+averaging their predictions produces a model that is more stable than a single
+tree. Like decision trees, random forests are not affected by the scale of the
+features. Their main hyperparameters are the number of trees and the maximum
+depth of each tree.
+
+\subsection{Support Vector Regression}
+
+Support Vector Regression (SVR) adapts the Support Vector Machine to regression
+problems \cite{drucker1997,smola2004}. It searches for a function that deviates
+from the true targets by at most $\varepsilon$ for as many training instances as
+possible, while keeping the function as simple as possible. Errors smaller than
+$\varepsilon$ are ignored, and larger errors are penalized according to the
+regularization parameter $C$. Through the use of kernel functions, such as the
+linear and the Radial Basis Function (RBF) kernels, SVR can also model non-linear
+relations. Since both $\varepsilon$ and the kernel functions depend on the scale
+of the data, SVR generally requires standardized features, and often a
+standardized target as well, to perform properly.
+
+\section{Building and Evaluating ML Pipelines}
+\label{sec:fund-pipeline}
+
+In practice, raw data are rarely provided directly to a learning algorithm.
+They are usually transformed by a sequence of preparation steps, and the
+algorithm must be configured and evaluated. This complete sequence, from the raw
+data to the final performance estimate, is referred to as an ML pipeline. This
+section describes the four pipeline steps investigated in this work and the
+procedures used to evaluate a model.
+
+\subsection{Feature Scaling}
+
+The features of a data set frequently have very different ranges, for instance
+when some of them are measured in units and others in thousands. Feature scaling
+transforms the features so that they have comparable ranges. The most common
+method, standardization (or $z$-score normalization), transforms each feature
+$x_j$ as follows:
+\begin{equation}
+  x'_j = \frac{x_j - \mu_j}{\sigma_j},
+  \label{eq:zscore}
+\end{equation}
+where $\mu_j$ and $\sigma_j$ are the mean and the standard deviation of the
+feature. After the transformation, every feature has mean zero and unit standard
+deviation. It is important to note that $\mu_j$ and $\sigma_j$ are estimated from
+the data. The scaler, therefore, also learns parameters from data before it can
+be applied, and the choice of which data are used for this purpose is relevant
+for the discussion in Section~\ref{sec:fund-vazamento}.
+
+\subsection{Missing Value Imputation}
+
+Real-world data sets often contain missing values, caused, for example, by
+measurement failures or by incomplete records. Since most learning algorithms
+cannot handle missing values, they must be replaced by estimated values before
+training, a process called imputation. The mechanisms that generate missing
+values are commonly classified into three types \cite{rubin1976,little2019}:
+missing completely at random (MCAR), when the probability of a value being
+missing is unrelated to the data; missing at random (MAR), when it depends only
+on other observed features; and missing not at random (MNAR), when it depends on
+the missing value itself.
+
+The simplest imputation methods replace each missing value with the mean or the
+median of the observed values of the same feature. The KNN imputer, in turn,
+finds the $K$ instances most similar to the incomplete one, based on the
+observed features, and uses the average of their values \cite{troyanskaya2001}.
+As in feature scaling, all these methods learn information from the data (means,
+medians, or reference instances) before they can be applied.
+
+\subsection{Feature Selection}
+
+Feature selection consists of keeping only a subset of the most relevant
+features and discarding the others. Reducing the number of features can produce
+simpler and faster models and, in some cases, improve their predictive
+performance \cite{guyon2003}. A common approach, adopted in this work, is to
+assign a score to each feature according to its relation with the target and to
+keep the features with the highest scores. In regression, a usual score is
+obtained from the $F$-test, which measures the strength of the linear relation
+between each feature and the target. Unlike scaling and imputation, this step
+uses the values of the target to decide which features are kept.
+
+\subsection{Hyperparameter Tuning}
+
+Hyperparameters are parameters of an algorithm that are defined before training,
+such as the number of neighbors in KNN, the maximum depth of a decision tree, or
+the regularization parameter and the kernel in SVR. Hyperparameter tuning is the
+process of evaluating different values and selecting those that produce the best
+performance. The most common strategy is grid search, which evaluates every
+combination of values in a predefined grid; random search, which evaluates a
+random sample of combinations, is a frequent alternative \cite{bergstra2012}. In
+both cases, each candidate configuration must be evaluated on data not used to
+train it, so the tuning process also relies on one of the evaluation procedures
+described next.
+
+\subsection{Model Evaluation}
+
+The simplest evaluation procedure is the hold-out method, in which the data are
+split once into a training set, used to build the model, and a test set, used
+only to measure its performance. The resulting estimate, however, depends on a
+single random split, which makes it unreliable for small data sets. In $k$-fold
+cross-validation (CV), the data are divided into $k$ subsets of similar size,
+called folds. The model is trained $k$ times, each time using $k-1$ folds for
+training and the remaining fold for testing, and the final estimate is the
+average of the $k$ results \cite{kohavi1995,hastie2009}. In this way, every
+instance is used exactly once for testing. The procedure can also be repeated
+with different random partitions to obtain a more stable estimate.
+
+When the same CV is used both to select the hyperparameters and to report the
+performance of the selected model, the reported value is the best result among
+many evaluated configurations. Part of this result is due to chance, and the
+estimate is therefore optimistically biased \cite{varma2006,cawley2010}. Nested
+CV addresses this problem by using two levels of CV. The outer level divides the
+data into training and test folds, as in a standard CV. Within each outer
+training fold, an inner CV is used to select the hyperparameters, and the
+selected model is then evaluated on the corresponding outer test fold, which did
+not take part in the selection. Although nested CV is computationally more
+expensive, it provides a nearly unbiased estimate of the performance of the
+complete tuning procedure \cite{varma2006}.
+
+\section{Data Leakage in ML Pipelines}
+\label{sec:fund-vazamento}
+
+The evaluation procedures described above are based on a fundamental
+assumption: the data used to evaluate a model must not be used, in any way, to
+build it. Data leakage occurs when this assumption is violated, that is, when
+information that would not be available when the model is applied in practice is
+used during its development \cite{kaufman2012}. Some forms of leakage are easily
+identified, such as a feature that directly encodes the target or the same
+record appearing in both the training and the test sets. Other forms are more
+subtle. \citeonline{kapoor2023} describe, among other types, the leakage caused
+by the lack of a clean separation between training and test data during
+pre-processing, for instance when a pre-processing step is applied to the whole
+data set before it is split.
+
+This form of leakage is the focus of this work. As discussed in
+Section~\ref{sec:fund-pipeline}, scalers, imputers, feature selectors, and tuning
+procedures all learn information from the data. In a correct pipeline, each of
+these components is fitted using only the training data of each split and is
+then applied, without modification, to the test data. In a leakage-prone
+pipeline, the same component is fitted once on the complete data set, and only
+afterwards are the data split. As a consequence, the test instances contribute
+to building the model that they are supposed to evaluate.
+Table~\ref{tab:fontes-vazamento} summarizes, for each step, what is learned from
+the data and which information from the test set reaches the model when leakage
+occurs.
+
+\begin{table}[htb]
+\centering
+\caption{What each pipeline step learns from data and what leaks when it is fitted on the full data set.}
+\label{tab:fontes-vazamento}
+\small
+\begin{tabular}{p{2.6cm}p{5.0cm}p{6.2cm}}
+\toprule
+\textbf{Step} & \textbf{Learned from data} & \textbf{Information leaked from the test set} \\
+\midrule
+Scaling & Mean and standard deviation of each feature & Distribution of the test feature values \\
+Imputation & Mean, median, or nearest neighbors of each feature & Test feature values used to impute training values (and vice versa) \\
+Feature selection & Relevance of each feature with respect to the target & Test \emph{target} values, through the choice of the features that are kept \\
+Hyperparameter tuning & Best configuration in the search space & Test performance, through the choice of the configuration that is reported \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize Source: The Author
+\end{table}
+
+The table suggests that the four steps are not equally harmful. Scaling and
+imputation leak only information about the features. When training and test
+instances come from the same distribution, this information is already well
+estimated from the training data alone, and the test data add little to it.
+Feature selection and hyperparameter tuning, on the other hand, leak information
+related to the target, either directly or through the performance of the model.
+This allows the pipeline to adapt to the specific test instances and may lead to
+considerably overestimated performance. These expectations are evaluated
+empirically in Chapter~\ref{cap:resultados}.
+
+\section{Statistical Tests}
+\label{sec:fund-estatistica}
+
+In this work, each leakage-prone pipeline is compared with a leakage-free
+pipeline executed on the same data split, which produces paired results. The
+Wilcoxon signed-rank test \cite{wilcoxon1945} is a non-parametric test that
+evaluates whether the differences between paired observations are
+symmetrically distributed around zero. Since it is based on the ranks of the
+differences rather than on their values, it does not assume that the differences
+are normally distributed and is robust to extreme values. \citeonline{demsar2006}
+recommends this test for comparing two methods over multiple data sets, using
+one summary value per data set. Pairs with a difference of exactly zero are
+discarded by the test, so a large number of ties reduces its effective sample
+size.
+
+To compare more than two methods over the same data sets, such as the five
+algorithms considered in this work, the Friedman test \cite{friedman1937} can be
+applied. It ranks the methods within each data set and tests whether their
+average ranks differ more than would be expected by chance \cite{demsar2006}.
+
+When many hypotheses are tested, the probability of obtaining at least one
+significant result by chance increases. The Holm procedure \cite{holm1979}
+adjusts the $p$-values to control this probability and is less conservative than
+the classical Bonferroni correction. Finally, the Spearman correlation
+coefficient $\rho$ \cite{spearman1904} measures the strength of a monotonic
+relation between two variables. In this work, it is used to assess whether the
+effect of leakage is related to characteristics of the data sets, such as their
+number of instances.

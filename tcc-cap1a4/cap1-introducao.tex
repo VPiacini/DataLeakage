@@ -1,0 +1,77 @@
+\chapter{Introduction}
+\label{cap:introducao}
+
+Machine Learning (ML) models have become central to scientific research and
+industrial applications, supporting decision-making processes in domains such as
+healthcare, finance, engineering, and environmental sciences. As predictive
+models are increasingly deployed in high-stakes settings, the reliable estimation
+of their generalization performance becomes essential. Rigorous evaluation
+protocols are required not only for comparing competing methods, but also to
+ensure that reported results accurately reflect how models behave on previously
+unseen data. However, when the process of training and validating ML models is
+not conducted correctly from a methodological point of view, the reported
+performance may diverge substantially from the model's real predictive
+capability. \citeonline{kapoor2023} argue that such methodological issues are
+widespread in ML-based scientific research, contributing to what has been
+described as a reproducibility crisis in machine-learning-based science.
+
+Among the factors that compromise evaluation reliability, data leakage (DL) is
+one of the most critical and persistent. Data leakage is defined as the
+contamination of the training process with privileged information from the
+independent validation or test set, to which the algorithm should not have access
+during model development \cite{kaufman2012}. Under a broader interpretation
+\cite{kapoor2023}, leakage extends beyond direct train-test overlap and includes
+more subtle methodological flaws, such as applying normalization using statistics
+computed over the entire data set, imputing missing values before data splitting,
+performing feature selection with information from both training and validation
+sets, or tuning hyperparameters in a way that indirectly incorporates evaluation
+data. Although these practices are frequently introduced unintentionally, they
+bias performance estimates and may produce misleading conclusions about model
+quality.
+
+The relevance of the problem has motivated a growing body of research focused on
+the characterization, detection, and mitigation of leakage, including formal
+definitions \cite{kaufman2012}, taxonomies of leakage types \cite{kapoor2023},
+static code analysis approaches \cite{drobnjakovic2022,yang2022}, and
+domain-specific guidelines \cite{bernett2024,apicella2024}. Empirical
+demonstrations of the phenomenon are comparatively scarcer, and the most
+influential ones come from bioinformatics: \citeonline{ambroise2002} showed that
+performing gene selection outside the cross-validation loop drives the estimated
+error rate close to zero even on data with no real signal, and
+\citeonline{varma2006} showed that the cross-validation error of a model whose
+hyperparameters were themselves chosen by cross-validation is a significantly
+biased estimate of the true error. These results, however, are confined to
+classification and to a single application domain. More recently,
+\citeonline{becker2023} conducted a systematic assessment of data leakage effects
+on the performance estimates of ML classifiers across several data sets and
+algorithms, showing that the magnitude of the distortion varies according to both
+the learning algorithm and the pre-processing step in which the leakage
+originates. Regression tasks, despite being equally susceptible to the same
+methodological flaws, have not received an equivalent treatment, and it remains
+unclear whether the patterns observed for classifiers transfer to continuous
+prediction targets.
+
+This work aims to address this gap by proposing a systematic and controlled study
+of the effects of data leakage on the performance estimates of ML models
+developed for regression tasks. The objective is to understand how different data
+sets and learning algorithms are affected by each kind of pre-processing
+contamination: normalization, missing values imputation, feature selection, and
+hyperparameter optimization. For each of these steps, experiments contrast a
+leakage-free pipeline with a leakage-prone counterpart under otherwise identical
+conditions, using benchmark regression data sets obtained from the Penn Machine
+Learning Benchmarks collection \cite{romano2022} and a diverse set of supervised
+learning algorithms. By isolating each contamination mechanism, this work seeks
+to quantify the magnitude and the variability of the performance inflation caused
+by data leakage, and to investigate whether certain regression algorithms are
+more sensitive to these distortions than others.
+
+This work is organized as follows. Chapter~\ref{cap:fundamentacao} provides a
+theoretical background, describing the key concepts for this work, including the
+regression algorithms employed, the pre-processing and validation procedures
+adopted, and the notion of data leakage. Chapter~\ref{cap:trabalhos} summarizes
+existing efforts based on related works. Next, Chapter~\ref{cap:metodologia}
+presents the methods used, including the selection of data and the experimental
+methodology adopted for each contamination scenario. The experimental results are
+unveiled in Chapter~\ref{cap:resultados}, alongside the research questions that
+our work aimed to address. Finally, conclusions and possible future works are
+presented in Chapter~\ref{cap:conclusao}.
