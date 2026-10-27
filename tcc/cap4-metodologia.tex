@@ -60,24 +60,21 @@ available at \url{https://github.com/VPiacini/DataLeakage}.
 \label{sec:met-dados}
 
 All data sets were obtained from the Penn Machine Learning Benchmarks (PMLB)
-repository \cite{olson2017,romano2022}, which offers a curated and standardized
-collection of benchmark problems with a uniform interface: every data set is
+repository \cite{olson2017,romano2022}, which offers a standardized collection of benchmark problems: every data set is
 provided as a numeric feature matrix and a target column, without missing values.
-The selection aimed at diversity rather than at a particular application, so that
-the conclusions are not tied to a single data-generating process. Three criteria
+The data sets were chosen to be diverse rather than to represent a particular
+application, so that the conclusions do not depend on a single kind of problem. Three criteria
 were considered: (i) the application domain, covering areas such as computer
 systems, economics, environmental and health sciences, remote sensing, and real
 estate; (ii) the number of instances, from a few dozen to tens of thousands; and
 (iii) the number of features and, in particular, the ratio between features and
-instances, which is expected to influence how easily a model can adapt to a
-small evaluation set.
+instances, which may influence how easily a model adapts to a small
+evaluation set.
 
 Twenty-one regression data sets were selected. Their characteristics are listed
 in Table~\ref{tab:datasets} and their distribution in terms of size and
-dimensionality is shown in Figure~\ref{fig:datasets}. The collection spans almost
-three orders of magnitude in the number of instances, from 47
-(\texttt{1089\_USCrime}) to 40,768 (\texttt{564\_fried}), and from 4 to 124
-features. Six data sets have fewer than 1,000 instances; among them,
+dimensionality is shown in Figure~\ref{fig:datasets}. The number of instances ranges from 47
+(\texttt{1089\_USCrime}) to 40,768 (\texttt{564\_fried}), and the number of features from 4 to 124. Six data sets have fewer than 1,000 instances; among them,
 \texttt{505\_tecator}, with 124 features for 240 instances, has the highest
 features-to-instances ratio, and \texttt{1089\_USCrime} and
 \texttt{542\_pollution} combine very few instances with more than ten features.
@@ -86,7 +83,7 @@ from the Friedman benchmark function \cite{friedman1991}, \texttt{225\_puma8NH}
 comes from a simulation of a robot arm, \texttt{529\_pollen} is artificially
 generated, and \texttt{1199\_BNG\_echoMonths} was produced by a Bayesian network
 generator from a real medical data set. They were kept because PMLB includes them
-as standard regression benchmarks and because their controlled origin is a useful
+as standard regression benchmarks and because their controlled origin offers a
 contrast to the real-world data sets. Before the experiments, no data set was
 transformed beyond what is described for each scenario.
 
@@ -117,9 +114,8 @@ every scenario, through their scikit-learn implementations:
 \texttt{DecisionTreeRegressor} (DT), \texttt{RandomForestRegressor} (RF), and
 support vector regression (SVR). Outside the tuning scenario, all algorithms were
 used with their default settings (for KNN, $k=5$ with the Euclidean distance;
-for RF, 100 trees), and DT and RF received a fixed random seed so that
-differences between paired runs could not be caused by the randomness of tree
-construction.
+for RF, 100 trees), and DT and RF received a fixed random seed so that differences between paired runs were not
+caused by the randomness of tree construction.
 
 Two implementation details concern SVR. First, because its regularization
 parameter $C$ and its tolerance $\varepsilon$ are expressed in the scale of the
@@ -129,8 +125,8 @@ back to the original scale before the metrics are computed; this transformation
 is fitted only on training data in both pipelines and is therefore not a source
 of leakage. Second, kernel SVR has a training cost that grows between
 quadratically and cubically with the number of instances
-\cite{chang2011}, which made it impractical for the largest data sets in the
-scenarios that do not involve tuning. In the normalization, imputation, and
+\cite{chang2011}, which made it too slow for the largest data sets in the scenarios that do not
+involve tuning. In the normalization, imputation, and
 feature selection scenarios, SVR was thus trained with a linear model solved by
 LIBLINEAR (\texttt{LinearSVR}, $C=1$, $\varepsilon=0.1$, $\varepsilon$-insensitive
 loss) \cite{fan2008}, which optimizes the same objective as a linear-kernel SVR
@@ -185,7 +181,7 @@ repetition is the average of the four test folds.
 \label{sec:met-imputacao}
 
 Since PMLB data sets are complete, missing values had to be introduced
-artificially. To make the scenario realistic, a MAR mechanism was adopted, using
+artificially. To make the scenario closer to real data, a MAR mechanism was adopted, using
 the masking procedure proposed by \citeonline{muzellec2020}, whose reference
 implementation was adapted for this work. In this procedure, a random subset of
 90\% of the features (at least one) is kept fully observed; each of the
@@ -216,9 +212,9 @@ partitions in each of the six repetitions.
 Feature selection was performed with a univariate filter, scikit-learn's
 \texttt{SelectPercentile} with the $F$-statistic for regression
 (\texttt{f\_regression}), keeping 1\%, 5\%, 10\%, or 20\% of the
-highest-scoring features. These low percentiles were chosen deliberately: the
-fewer features are kept, the more the outcome depends on the exact ranking of
-the features, and the more room there is for the test examples to influence it.
+highest-scoring features. These low percentiles were chosen on purpose: the fewer features are kept, the
+more the result depends on the exact ranking of the features, and the more the
+test instances can influence it.
 Whenever a percentile would select less than one feature, it was raised to the
 smallest value that keeps exactly one, and the same adjusted value was used in
 both pipelines. As a consequence, the 1\% and 5\% levels keep a single feature in every
@@ -240,8 +236,8 @@ different random split (seed $i$), shared by both pipelines.
 \label{sec:met-tuning}
 
 Hyperparameters were tuned by exhaustive grid search (\texttt{GridSearchCV}).
-The grids, listed in Table~\ref{tab:grades}, were kept small enough to make
-nested CV feasible on all data sets, but still offer between four and fifteen
+The grids, listed in Table~\ref{tab:grades}, were kept small enough to make nested CV feasible on all data sets, but still
+contain between four and fifteen
 candidate configurations per algorithm. In the leakage-prone pipeline, a single
 $4$-fold CV is used both to select the configuration and to report its
 performance: for each metric, the reported value is the mean CV score of the
@@ -302,9 +298,8 @@ specific factor) are averaged, producing 21 values, one per data set. The
 two-sided Wilcoxon signed-rank test is applied to these values to test whether
 the median effect differs from zero, and the five $p$-values of each scenario
 (one per algorithm) are adjusted with the Holm procedure. Results are considered
-significant at $\alpha = 0.05$ after adjustment. Testing at the level of
-individual configurations is less informative, since six pairs allow a minimum
-two-sided $p$-value of $0.031$; at that level, the number of configurations in
+significant at $\alpha = 0.05$ after adjustment. Testing each configuration separately would be less informative, since with six
+pairs the smallest possible two-sided $p$-value is $0.031$; at that level, the number of configurations in
 which leakage improved the estimate in all six repetitions is reported instead,
 as a descriptive measure of consistency.
 

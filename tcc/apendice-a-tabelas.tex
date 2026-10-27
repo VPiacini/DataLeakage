@@ -1,10 +1,23 @@
 \chapter{Detailed Results}
 \label{ap:tabelas}
 
-This appendix complements Chapter~\ref{cap:resultados} with the detailed results
-of the feature selection scenario per percentile of features kept. All values are
+This appendix complements Chapter~\ref{cap:resultados} with detailed results:
+the imputation scenario per imputer, the feature selection scenario per
+percentile of features kept, and the data set--algorithm combinations most
+affected by leakage in each scenario. All values are
 produced by the script \texttt{tcc/scripts/gerar\_tabelas\_figuras.py} from the
 raw result files available in the project repository.
+
+\begin{table}[htb]
+\centering
+\caption{Effect of leakage in the imputation scenario, per imputer and algorithm.}
+\label{tab:alg-imputador}
+\small
+\setlength{\tabcolsep}{3pt}
+\input{tabelas/tab_alg_imp_imputer}
+\\[2pt]
+\footnotesize Source: The Author. Columns as in Table~\ref{tab:alg-normalizacao}; Holm adjustment applied within each imputer.
+\end{table}
 
 \begin{table}[htb]
 \centering
@@ -35,6 +48,26 @@ raw result files available in the project repository.
 \input{tabelas/tab_top_imputation}
 \\[2pt]
 \footnotesize Source: The Author. Values averaged over imputers, missing rates, and repetitions.
+\end{table}
+
+\begin{table}[htb]
+\centering
+\caption{Data set--algorithm combinations with the largest mean $\Delta R^2$ in the feature selection scenario.}
+\label{tab:top-selecao}
+\small
+\input{tabelas/tab_top_feature_selection}
+\\[2pt]
+\footnotesize Source: The Author. Values averaged over percentiles and repetitions.
+\end{table}
+
+\begin{table}[htb]
+\centering
+\caption{Data set--algorithm combinations with the largest mean $\Delta R^2$ in the hyperparameter tuning scenario.}
+\label{tab:top-tuning}
+\small
+\input{tabelas/tab_top_tuning}
+\\[2pt]
+\footnotesize Source: The Author. Values averaged over repetitions.
 \end{table}
 
 \begin{figure}[htb]
