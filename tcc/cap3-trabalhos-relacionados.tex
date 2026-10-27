@@ -1,0 +1,171 @@
+\chapter{Related Works}
+\label{cap:trabalhos}
+
+Data leakage has received growing attention as a major threat to the validity,
+reproducibility, and practical applicability of ML models. This chapter reviews
+the existing literature on the topic. Section~\ref{sec:tr-dl} covers works
+dedicated to defining, characterizing, and detecting leakage, as well as those
+proposing guidelines to avoid it. Section~\ref{sec:tr-efeitos} covers empirical
+studies that measured the consequences of leakage on performance estimates.
+Finally, Section~\ref{sec:tr-sumario} summarizes the reviewed works and positions
+the contributions of the present study.
+
+\section{Data Leakage}
+\label{sec:tr-dl}
+
+The foundational formulation of the problem is due to \citeonline{kaufman2012},
+who defined leakage as the introduction of information into the model development
+process that would not be legitimately available at prediction time. The authors
+formalized the problem, proposed a methodology for its detection, and discussed
+avoidance strategies in the context of data mining competitions and predictive
+modeling in general.
+
+\citeonline{kapoor2023} expanded this perspective considerably by proposing a
+broader taxonomy of leakage mechanisms and demonstrating their role in the
+reproducibility crisis affecting ML-based science. Their analysis of studies from
+17 scientific fields revealed that methodological flaws involving data
+partitioning, pre-processing, and feature engineering are widespread and
+frequently result in overly optimistic performance estimates. Their taxonomy is
+particularly relevant to the present work, as it explicitly identifies
+pre-processing steps applied before data splitting as a distinct and recurrent
+leakage mechanism.
+
+The increasing awareness of these risks has motivated the development of
+practical guidelines. \citeonline{bernett2024} proposed a set of guiding
+questions to help practitioners identify leakage-prone workflows in biological ML
+applications, covering both data acquisition and pipeline construction.
+\citeonline{apicella2024} discussed common leakage risks in traditional ML and
+transfer learning settings, emphasizing how leakage may arise from decisions that
+appear methodologically harmless. A classical textbook treatment of the same
+issue is provided by \citeonline{hastie2009}, whose discussion of the wrong and
+the right way to perform cross-validation describes precisely the mechanism by
+which pre-processing applied outside the validation loop contaminates performance
+estimates.
+
+Automated detection approaches have also been explored.
+\citeonline{drobnjakovic2022} introduced a static analysis framework capable of
+detecting leakage patterns directly in ML pipeline code, while
+\citeonline{yang2022} proposed methods for identifying leakage-related issues in
+computational notebooks, along with process-level recommendations to reduce their
+occurrence. These works are complementary to the present study: whereas they aim
+to detect whether leakage is present, our objective is to quantify how much the
+estimated performance is distorted when it is.
+
+\section{Effects of Data Leakage}
+\label{sec:tr-efeitos}
+
+A second group of works investigated the practical consequences of leakage
+through empirical experiments, most of them restricted to specific application
+domains or to individual pipeline steps.
+
+The earliest and most influential demonstrations come from bioinformatics.
+\citeonline{ambroise2002} showed that performing gene selection outside the
+cross-validation loop drives the estimated error rate close to zero even on data
+containing no real signal, establishing feature selection as a critical leakage
+source. \citeonline{varma2006} demonstrated an analogous effect for model
+selection, showing that the cross-validation error of a model whose
+hyperparameters were themselves chosen by cross-validation is a significantly
+biased estimate of the true error, and that nested cross-validation provides a
+nearly unbiased alternative.
+
+Subsequent studies confirmed these findings in other domains.
+\citeonline{shim2021} showed that performing feature selection before data
+partitioning dramatically inflates predictive performance in neuropsychiatric
+biomarker discovery, producing misleading conclusions about model effectiveness.
+\citeonline{samala2020} reported analogous risks in breast cancer classification
+with deep neural networks, where performance rose substantially when feature
+selection improperly included the validation set. In medical imaging,
+\citeonline{yagis2021} observed substantial inflation in classification accuracy
+when MRI slices from the same patient were distributed across training and
+testing sets, and \citeonline{bussola2021} showed, in digital pathology, how
+correlations between image tiles from the same slide lead to severe performance
+overestimation when train-test independence is violated.
+
+Leakage arising from model development procedures rather than from data handling
+has also been documented. \citeonline{cawley2010} showed that improper model
+selection and hyperparameter optimization procedures can introduce substantial
+evaluation bias even when training and testing data sets remain formally
+separated, and proposed an unbiased evaluation methodology that accounts for
+overfitting occurring during model selection. \citeonline{farrow2019}
+demonstrated, in a replication study on discussion forum data, how seemingly
+harmless pre-processing decisions may contaminate evaluation protocols and
+compromise the validity of reported results.
+
+Particularly relevant to the present work, \citeonline{becker2023} conducted a
+systematic empirical assessment of DL effects on classification models,
+investigating four leakage scenarios --- normalization, missing values
+imputation, feature selection, and hyperparameter tuning --- across 30 PMLB data
+sets and six learning algorithms under a unified experimental framework. The
+study revealed a consistent pattern of performance overestimation in the presence
+of leakage, with the effect being most pronounced for feature selection and
+hyperparameter tuning, and with SVM showing comparatively higher susceptibility
+than logistic regression. The magnitude of the distortion varied according to
+both the learning algorithm and the pipeline step in which leakage originated,
+and the data sets could be grouped according to how strongly they responded to
+contamination.
+
+\citeonline{becker2023} is the work most closely related to ours, and the direct
+motivation for this study. Its experimental design --- paired leakage-free and
+leakage-prone pipelines differing only in the presence of contamination --- is
+adopted here as well. The present work extends that investigation to regression
+tasks, where the target variable is continuous, the applicable algorithms differ,
+and the evaluation metrics are unbounded and scale-dependent, none of which can
+be assumed to preserve the patterns observed for classification.
+
+\section{Summary}
+\label{sec:tr-sumario}
+
+Table~\ref{tab:trabalhos-relacionados} relates the topics addressed by each work
+discussed in Sections~\ref{sec:tr-dl} and~\ref{sec:tr-efeitos} to those addressed
+by the present study. As can be observed, most previous works concentrate either
+on defining and detecting leakage or on assessing its effects in a single
+pipeline step or application domain. Only \citeonline{becker2023} evaluated the
+four pre-processing and model development steps jointly, and that study is
+restricted to classification. To the best of our knowledge, no prior work has
+systematically quantified the effects of leakage introduced at multiple pipeline
+stages for regression tasks across a diverse collection of benchmark data sets
+and learning algorithms, which is the gap this work addresses.
+
+\begin{table}[htb]
+\centering
+\caption{Summary of the related work and expected contributions of this study.}
+\label{tab:trabalhos-relacionados}
+\small
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.15}
+\begin{tabular}{l*{10}{c}}
+\toprule
+\textbf{Work}
+ & \begin{sideways}Define / understand DL\end{sideways}
+ & \begin{sideways}Propose strategy to avoid DL\end{sideways}
+ & \begin{sideways}Detect DL automatically\end{sideways}
+ & \begin{sideways}Effects on normalization\end{sideways}
+ & \begin{sideways}Effects on value imputation\end{sideways}
+ & \begin{sideways}Effects on feature selection\end{sideways}
+ & \begin{sideways}Effects on hyperparameter tuning\end{sideways}
+ & \begin{sideways}Effects across algorithms\end{sideways}
+ & \begin{sideways}Effects across data sets\end{sideways}
+ & \begin{sideways}Regression tasks\end{sideways} \\
+\midrule
+\citeonline{ambroise2002}      &   & X &   &   &   & X &   &   &   &   \\
+\citeonline{varma2006}         &   & X &   &   &   &   & X &   &   &   \\
+\citeonline{cawley2010}        & X & X &   &   &   &   & X &   &   &   \\
+\citeonline{kaufman2012}       & X & X &   &   &   &   &   &   &   &   \\
+\citeonline{farrow2019}        &   &   &   &   &   &   &   &   & X &   \\
+\citeonline{samala2020}        &   &   &   &   &   & X &   &   &   &   \\
+\citeonline{bussola2021}       &   & X &   &   &   &   &   &   & X &   \\
+\citeonline{shim2021}          &   &   &   &   &   & X &   &   &   &   \\
+\citeonline{yagis2021}         &   &   &   &   &   &   &   & X &   &   \\
+\citeonline{drobnjakovic2022}  &   &   & X &   &   &   &   &   &   &   \\
+\citeonline{yang2022}          &   & X & X &   &   &   &   &   &   &   \\
+\citeonline{kapoor2023}        & X & X &   & X & X & X & X &   & X &   \\
+\citeonline{apicella2024}      & X & X &   &   &   &   &   &   &   &   \\
+\citeonline{bernett2024}       &   & X &   &   &   &   &   &   &   &   \\
+\citeonline{becker2023}        & X &   &   & X & X & X & X & X & X &   \\
+\midrule
+\textbf{This work}             &   &   &   & X & X & X & X & X & X & X \\
+\bottomrule
+\end{tabular}
+\\[2pt]
+\footnotesize Source: The Author
+\end{table}

@@ -1,0 +1,54 @@
+\chapter{Detailed Results}
+\label{ap:tabelas}
+
+This appendix complements Chapter~\ref{cap:resultados} with the detailed results
+of the feature selection scenario per percentile of features kept. All values are
+produced by the script \texttt{tcc/scripts/gerar\_tabelas\_figuras.py} from the
+raw result files available in the project repository.
+
+\begin{table}[htb]
+\centering
+\caption{Effect of leakage in the feature selection scenario, per percentile and algorithm.}
+\label{tab:alg-percentil}
+\small
+\setlength{\tabcolsep}{3pt}
+\input{tabelas/tab_alg_fs_perc}
+\\[2pt]
+\footnotesize Source: The Author. Columns as in Table~\ref{tab:alg-normalizacao}; Holm adjustment applied within each percentile.
+\end{table}
+
+\begin{table}[htb]
+\centering
+\caption{Data set--algorithm combinations with the largest mean $\Delta R^2$ in the normalization scenario.}
+\label{tab:top-normalizacao}
+\small
+\input{tabelas/tab_top_normalization}
+\\[2pt]
+\footnotesize Source: The Author. Values averaged over repetitions.
+\end{table}
+
+\begin{table}[htb]
+\centering
+\caption{Data set--algorithm combinations with the largest mean $\Delta R^2$ in the imputation scenario.}
+\label{tab:top-imputacao}
+\small
+\input{tabelas/tab_top_imputation}
+\\[2pt]
+\footnotesize Source: The Author. Values averaged over imputers, missing rates, and repetitions.
+\end{table}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.75\textwidth]{figuras/fig_heatmap_normalization.pdf}
+\caption{Mean $\Delta R^2$ per data set and algorithm in the normalization scenario.}
+\label{fig:heatmap-normalizacao}
+\legend{Source: The Author. Values below 0.0005 in absolute value are omitted.}
+\end{figure}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.75\textwidth]{figuras/fig_heatmap_imputation.pdf}
+\caption{Mean $\Delta R^2$ per data set and algorithm in the imputation scenario.}
+\label{fig:heatmap-imputacao}
+\legend{Source: The Author. Values below 0.0005 in absolute value are omitted.}
+\end{figure}

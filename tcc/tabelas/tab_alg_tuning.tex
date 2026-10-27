@@ -1,0 +1,13 @@
+\begin{tabular}{lrrrrrrrr}
+\toprule
+\textbf{Alg.} & \multicolumn{3}{c}{\textbf{$\Delta R^2$ per data set}} & \textbf{$\Delta$RMSE (\%)} & \textbf{Better} & \textbf{Tie} & \textbf{Worse} & \textbf{$p_{\text{Holm}}$} \\
+\cmidrule(lr){2-4}
+& Mean & Median & Max & Mean & (\%) & (\%) & (\%) & ($R^2$) \\
+\midrule
+LR & 0.0281 & 0.0000 & 0.3489 & 4.61 & 15.1 & 83.3 & 1.6 & 0.028 \\
+KNN & 0.0083 & 0.0013 & 0.0683 & 1.11 & 70.6 & 22.2 & 7.1 & $<$0.001 \\
+DT & 0.0089 & 0.0007 & 0.1181 & 1.17 & 38.9 & 52.4 & 8.7 & 0.004 \\
+RF & 0.0017 & 0.0001 & 0.0103 & 0.34 & 59.5 & 31.7 & 8.7 & $<$0.001 \\
+SVR & 0.0188 & 0.0003 & 0.3212 & 2.18 & 38.9 & 58.7 & 2.4 & 0.004 \\
+\bottomrule
+\end{tabular}

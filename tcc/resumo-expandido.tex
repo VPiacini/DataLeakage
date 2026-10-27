@@ -1,0 +1,107 @@
+% Resumo expandido em portugues (Resolucao 114/2004 - CAMPG/UFRGS),
+% recomendado quando o trabalho e escrito em ingles.
+\chapter{Resumo Expandido}
+\label{ap:resumo-expandido}
+
+\begin{otherlanguage}{brazilian}
+
+\begin{center}
+\textbf{Avaliação do Impacto do Vazamento de Dados em Pipelines de Aprendizado de Máquina para Tarefas de Regressão}
+\end{center}
+
+\subsection*{Introdução}
+
+Modelos de aprendizado de máquina (\emph{machine learning}, ML) são cada vez mais
+usados para apoiar decisões em áreas como saúde, finanças e engenharia. Para que
+os resultados reportados sejam confiáveis, a estimativa do desempenho de
+generalização precisa ser obtida com dados que não participaram da construção do
+modelo. O vazamento de dados (\emph{data leakage}) ocorre quando essa separação
+é violada, isto é, quando informações que não estariam disponíveis no momento da
+predição são usadas durante o desenvolvimento do modelo \cite{kaufman2012}. Uma
+forma frequente e difícil de perceber é a aplicação de etapas de
+pré-processamento ou de seleção de modelos sobre o conjunto de dados completo,
+antes da divisão entre treino e teste \cite{kapoor2023}.
+
+Estudos anteriores documentaram os efeitos do vazamento em domínios específicos,
+como bioinformática e imagens médicas, e \citeonline{becker2023} avaliou
+sistematicamente esses efeitos em tarefas de classificação. Para tarefas de
+regressão, nas quais a variável alvo é contínua e as métricas de avaliação são
+diferentes, não há evidência equivalente. O objetivo deste trabalho é quantificar
+como o vazamento introduzido em quatro etapas de um pipeline (normalização,
+imputação de valores faltantes, seleção de atributos e ajuste de
+hiperparâmetros) distorce a avaliação de modelos de regressão, e investigar se
+alguns algoritmos e conjuntos de dados são mais sensíveis a essas distorções.
+
+\subsection*{Metodologia}
+
+O estudo adota um desenho pareado. Para cada combinação de conjunto de dados,
+algoritmo e cenário de vazamento, são executados dois pipelines que diferem
+apenas na etapa estudada: no pipeline sem vazamento, todo componente que aprende
+com os dados é ajustado somente nos dados de treino de cada partição; no pipeline
+com vazamento, o componente estudado é ajustado no conjunto completo antes da
+divisão. Ambos usam as mesmas partições e sementes aleatórias, e cada
+configuração é repetida seis vezes.
+
+Foram utilizados 21 conjuntos de dados de regressão do repositório PMLB
+\cite{romano2022}, com 47 a 40.768 instâncias e 4 a 124 atributos, e cinco
+algoritmos: regressão linear (LR), k vizinhos mais próximos (KNN), árvore de
+decisão (DT), floresta aleatória (RF) e regressão por vetores de suporte (SVR).
+Na normalização, foi usada a padronização $z$-score. Na imputação, valores
+faltantes foram inseridos com um mecanismo MAR \cite{muzellec2020} em taxas de
+5\% a 30\% e preenchidos pela média, pela mediana ou por KNN. Na seleção de
+atributos, um filtro univariado baseado no teste $F$ manteve de 1\% a 20\% dos
+atributos. No ajuste de hiperparâmetros, a busca em grade com validação cruzada
+simples (que escolhe a configuração e reporta seu desempenho nos mesmos dados)
+foi comparada à validação cruzada aninhada. No total, foram obtidas 11.340
+comparações pareadas.
+
+O efeito do vazamento foi medido pela diferença de $R^2$ entre os pipelines com e
+sem vazamento e pela redução percentual do RMSE, ambas orientadas de modo que
+valores positivos indicam desempenho inflado. As diferenças foram analisadas com
+o teste de postos sinalizados de Wilcoxon sobre as médias por conjunto de dados,
+com correção de Holm, com o teste de Friedman para comparar algoritmos e com a
+correlação de Spearman para relacionar os efeitos às características dos
+conjuntos de dados \cite{demsar2006}.
+
+\subsection*{Resultados}
+
+Os quatro cenários apresentaram comportamentos muito diferentes. O vazamento na
+normalização e na imputação, que transmite apenas estatísticas dos atributos,
+produziu diferenças desprezíveis (média de cerca de $2\times10^{-4}$ no $R^2$),
+distribuídas de forma quase simétrica em torno de zero. A única exceção foi um
+viés pequeno, mas estatisticamente significativo, para o SVR na imputação, mais
+visível com o imputador KNN, que usa instâncias individuais para preencher os
+valores faltantes.
+
+O ajuste de hiperparâmetros sem validação cruzada aninhada foi o cenário mais
+crítico: inflou significativamente as estimativas dos cinco algoritmos, com
+diferenças de até 0,35 no $R^2$ e RMSE subestimado em até 54\%. O KNN foi o
+algoritmo afetado de forma mais consistente, enquanto LR e SVR apresentaram os
+casos individuais mais extremos. A seleção de atributos antes da divisão dos
+dados não alterou 93,6\% dos pares, pois a seleção feita com e sem as instâncias
+de teste costuma coincidir, mas produziu algumas das maiores distorções do
+estudo: em um conjunto com 60 instâncias, o $R^2$ estimado para a regressão
+linear passou de $-0{,}13$ para $0{,}49$.
+
+Os maiores efeitos concentraram-se nos seis conjuntos de dados com menos de 1.000
+instâncias. No ajuste de hiperparâmetros, a inflação mostrou forte correlação
+negativa com o número de instâncias ($\rho = -0{,}82$) e positiva com a razão
+entre atributos e instâncias ($\rho = 0{,}82$). Diferenças significativas entre
+algoritmos foram encontradas apenas nesse cenário; os modelos baseados em
+árvores, em especial a RF, foram os mais robustos de modo geral.
+
+\subsection*{Conclusão}
+
+Os resultados indicam que a gravidade do vazamento depende principalmente do tipo
+de informação que vaza. Etapas que utilizam a variável alvo, direta ou
+indiretamente, como a seleção supervisionada de atributos e o ajuste de
+hiperparâmetros, são as fontes mais perigosas de vazamento em regressão, sobretudo
+quando há poucos dados disponíveis. Recomenda-se, portanto, que todas as etapas
+que aprendem com os dados sejam incluídas no pipeline validado e que o desempenho
+de procedimentos de ajuste de hiperparâmetros seja estimado com validação cruzada
+aninhada. Como trabalhos futuros, propõe-se investigar mecanismos de dados
+faltantes mais severos, métodos de seleção de atributos do tipo \emph{wrapper} e
+embutidos, a combinação de múltiplas fontes de vazamento e a variação controlada
+do tamanho dos conjuntos de dados.
+
+\end{otherlanguage}

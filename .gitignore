@@ -31,3 +31,16 @@ Thumbs.db
 
 #Arquivos diferentes
 results_backup/
+# TCC (LaTeX): versiona os fontes e as figuras, ignora os auxiliares
+!tcc/figuras/*.pdf
+tcc/*.aux
+tcc/*.bbl
+tcc/*.blg
+tcc/*.fdb_latexmk
+tcc/*.fls
+tcc/*.log
+tcc/*.lof
+tcc/*.lot
+tcc/*.out
+tcc/*.toc
+tcc/*.synctex.gz

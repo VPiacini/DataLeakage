@@ -1,0 +1,61 @@
+\chapter{Conclusion}
+\label{cap:conclusao}
+
+This work investigated how data leakage introduced at four steps of an ML
+pipeline (normalization, missing value imputation, feature selection, and
+hyperparameter tuning) distorts the performance estimates of regression models.
+Following a paired design, leakage-free and leakage-prone pipelines were run on
+the same data partitions for 21 regression data sets from PMLB and five learning
+algorithms, totaling 11,340 paired comparisons, and the differences between them
+were measured with $R^2$ and RMSE and analyzed with non-parametric tests.
+
+The results show that the danger of leakage depends above all on \emph{what}
+leaks. Fitting a scaler or an imputer on the full data set leaks only statistics
+of the features, and its effect on the estimates was negligible: mean
+differences in $R^2$ of about $2\times10^{-4}$, distributed almost symmetrically
+around zero, with the single exception of a small but significant bias for SVR
+under imputation. Steps that use the target are different. Non-nested
+hyperparameter tuning inflated the estimates of all five algorithms in a
+statistically significant way, with differences in $R^2$ of up to 0.35 and RMSE
+underestimated by up to 54\%. Feature selection performed before data splitting
+left most configurations unchanged, but produced some of the largest distortions
+of the study, such as a model whose $R^2$ rose from $-0.13$ to $0.49$ when the
+selection saw the test instances.
+
+The study also shows that the effects are concentrated in small data sets. For
+hyperparameter tuning, the inflation was strongly correlated with the number of
+instances and with the ratio between features and instances, and in all
+scenarios the largest distortions occurred in data sets with fewer than 1,000
+instances. Regarding the algorithms, differences were significant only for
+tuning, where KNN was the most consistently affected and LR and SVR showed the
+most extreme individual cases; tree-based models, and RF in particular, were the
+most robust overall.
+
+From a practical standpoint, these findings reinforce well-known recommendations
+and help prioritize them. Every step that learns from data should be part of the
+pipeline that is cross-validated, and this is mandatory for any step that uses
+the target, such as supervised feature selection, and for hyperparameter
+tuning, whose performance must be estimated with nested CV or with a test set
+that took no part in the search. The smaller the data set, the more critical
+these precautions become, and the less a single optimistic number obtained from a
+leaky protocol should be trusted. Conversely, the small effects observed for
+normalization and imputation do not make these mistakes acceptable, but suggest
+that, in data sets of moderate size and under the conditions tested here, they
+are unlikely to change the conclusions of a study.
+
+\section{Future Work}
+
+Several extensions could deepen these findings. The imputation scenario could be
+repeated with a larger fraction of incomplete features and with MCAR and MNAR
+mechanisms, which would test whether the small effects observed here persist
+under heavier missingness. Feature selection could be evaluated with wrapper and
+embedded methods, which interact more closely with the learning algorithm, and
+with a larger number of small and high-dimensional data sets, where this form of
+leakage is expected to matter most. Combining several leakage sources in the same
+pipeline would reveal whether their effects add up, compensate, or amplify each
+other. Other algorithms, such as neural networks and gradient boosting, and other
+search strategies, such as random search and Bayesian optimization, could also be
+included. Finally, the relation between data set size and leakage suggests that a
+controlled study varying the number of instances of the same data sets, through
+subsampling, could provide a more precise characterization of when leakage
+becomes harmful in regression.
