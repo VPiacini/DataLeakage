@@ -8,7 +8,7 @@ from sklearn.model_selection import train_test_split
 
 from model_utils import (
     NUM_TRIALS, datasets, target_algorithms, fetch_data,
-    build_model, multiple_score, limit_rows,
+    build_model, multiple_score,
     load_results, already_done, append_and_save, timer, output_path,
 )
 
@@ -24,22 +24,20 @@ def run_feature_selection_test():
 
     for ds in datasets:
         print("\n TESTING ds: _", ds, "_\n", flush=True)
-        df_full = fetch_data(ds)
+        df = fetch_data(ds)
+        X = df.drop('target', axis=1)
+        y = df['target']
+        n_features = X.shape[1]
 
         for alg in target_algorithms:
             print("alg: ", alg, flush=True)
-            df = limit_rows(df_full, alg)
-            X = df.drop('target', axis=1)
-            y = df['target']
-            n_features = X.shape[1]
 
             for perc in PERCENTILES:
                 print("perc: ", perc, flush=True)
                 if already_done(results, ds=ds, alg=alg, perc=perc):
                     continue
 
-                # Garante pelo menos 1 feature — e usa o MESMO percentil nos dois cenários
-                # (antes só o cenário com vazamento usava o percentil ajustado).
+                # Garante pelo menos 1 feature e usa o MESMO percentil nos dois cenários.
                 actual_perc = perc
                 if n_features * (perc / 100) < 1:
                     actual_perc = 100 / n_features

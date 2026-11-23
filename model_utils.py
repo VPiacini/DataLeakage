@@ -8,7 +8,6 @@ Configuração via variáveis de ambiente (todas opcionais):
     N_JOBS        paralelismo do CV / GridSearchCV (default -1 = todos os núcleos)
     SVR_IMPL      "linear" (LinearSVR, rápido, default) ou "libsvm" (SVR(kernel="linear") original)
     SVR_SCALE_Y   "1" (default) padroniza o alvo dentro do SVR; "0" desliga
-    SVR_MAX_ROWS  teto de linhas para SVR com kernel (libsvm / tuning). Default 5000; 0 = sem teto - utilizando sem teto
     SVR_CACHE_MB  cache do libsvm em MB (default 1000)
     RESUME        "1" pula blocos já gravados no CSV; "0" (default) recomeça do zero
 """
@@ -30,8 +29,7 @@ import numpy as np
 import pandas as pd
 
 from sklearn.compose import TransformedTargetRegressor
-from sklearn.experimental import enable_iterative_imputer  #(necessário p/ IterativeImputer)
-from sklearn.impute import SimpleImputer, IterativeImputer, KNNImputer
+from sklearn.impute import SimpleImputer, KNNImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
@@ -41,7 +39,6 @@ from sklearn.svm import SVR, LinearSVR
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.neural_network import MLPRegressor
 
 from pmlb import fetch_data
 
@@ -64,7 +61,6 @@ N_JOBS = _env_int("N_JOBS", -1)
 NUM_TRIALS = _env_int("NUM_TRIALS", 6)
 SVR_IMPL = os.environ.get("SVR_IMPL", "linear").lower()
 SVR_SCALE_Y = os.environ.get("SVR_SCALE_Y", "1") == "1"
-SVR_MAX_ROWS = _env_int("SVR_MAX_ROWS", 5000)
 SVR_CACHE_MB = _env_int("SVR_CACHE_MB", 1000)
 RESUME = os.environ.get("RESUME", "0") == "1"
 
@@ -74,15 +70,12 @@ target_algorithms = _env_list("ALGS", [
     "DT",
     "RF",
     "SVR",
-    # "NN",
 ])
 
-#   228_elevators e 573_house_16L existiam em versões antigas do PMLB e foram
-#   removidos/renomeados no PMLB 1.0 -- fetch_data() falharia para eles hoje.
+# 20 datasets de regressão do PMLB, ordenados por número de instâncias.
 #
-# Datasets sintéticos/artificiais mantidos na lista (dados de origem real
-# transformados ou gerados por simulação/modelo estatístico, não medições
-# diretas) -- ver documentacao_projeto.txt para a revisão completa:
+# Datasets sintéticos mantidos na lista (gerados por simulação ou modelo
+# estatístico, não medições diretas):
 #   529_pollen           -> sintético (gerado por simulação, ver metadata do PMLB)
 #   225_puma8NH          -> sintético (simulação de um braço robótico Puma 560)
 #   1199_BNG_echoMonths  -> sintético (réplica artificial de "echoMonths" gerada
@@ -91,8 +84,6 @@ target_algorithms = _env_list("ALGS", [
 # 22784 linhas de 218_house_8L, só com um subconjunto de atributos escolhido
 # artificialmente para ser "mais difícil" -- redundante e não agrega um
 # dataset realmente novo.
-#
-# Lista ordenada por n_instances (menor -> maior).
 datasets = _env_list("DATASETS", [
     "1089_USCrime",          # 47
     "1096_FacultySalaries",  # 50
@@ -106,7 +97,7 @@ datasets = _env_list("DATASETS", [
     "1029_LEV",              # 1000
     "529_pollen",            # 3848  (sintético)
     "294_satellite_image",   # 6435
-    "503_wind",               # 6574
+    "503_wind",              # 6574
     "227_cpu_small",         # 8192
     "225_puma8NH",           # 8192  (sintético)
     "197_cpu_act",           # 8192
@@ -121,7 +112,11 @@ datasets = _env_list("DATASETS", [
 # Modelos
 # ----------------------------------------------------------------------------
 def _uses_kernel_svr(alg, for_tuning=False):
-    """True quando o SVR é o do libsvm (custo ~O(n^2)~O(n^3))."""
+    """True quando o SVR é o do libsvm (SVR com kernel, custo entre O(n^2) e O(n^3)).
+
+    No tuning o SVR com kernel é sempre usado, porque a grade testa os kernels
+    linear e RBF. Nos demais testes usa-se o LinearSVR, salvo com SVR_IMPL=libsvm.
+    """
     return alg == "SVR" and (for_tuning or SVR_IMPL == "libsvm")
 
 
@@ -146,12 +141,6 @@ def get_estimator(alg, for_tuning=False):
             dual=True,
             max_iter=20000,
             random_state=42,
-        )
-    elif alg == "NN":
-        return MLPRegressor(
-            hidden_layer_sizes=(100,),
-            random_state=42,
-            max_iter=500
         )
     raise ValueError(f"Unknown algorithm: {alg}")
 
@@ -183,14 +172,6 @@ def param_prefix(alg):
     return "regressor__regressor__" if (alg == "SVR" and SVR_SCALE_Y) else "regressor__"
 
 
-def limit_rows(df, alg, for_tuning=False):
-    """Subamostra (determinística) o dataset para o SVR com kernel, que não escala em n."""
-    if _uses_kernel_svr(alg, for_tuning) and SVR_MAX_ROWS > 0 and len(df) > SVR_MAX_ROWS:
-        print(f"  [SVR] subamostrando {len(df)} -> {SVR_MAX_ROWS} linhas (SVR_MAX_ROWS)", flush=True)
-        return df.sample(n=SVR_MAX_ROWS, random_state=42).reset_index(drop=True)
-    return df
-
-
 # ----------------------------------------------------------------------------
 # Métricas
 # ----------------------------------------------------------------------------
@@ -213,6 +194,7 @@ def multiple_score(y_true, y_pred):
 
 
 def make_dict(results):
+    """Métricas da melhor configuração do GridSearchCV (média dos folds), a partir de cv_results_."""
     return {
         "test_mae":
             -results["mean_test_neg_mean_absolute_error"][
@@ -233,6 +215,7 @@ def make_dict(results):
 
 
 def make_dict_mean(results):
+    """Média das métricas entre os folds, a partir do retorno de cross_validate."""
     return {
         "test_mae":
             -results["test_neg_mean_absolute_error"].mean(),
@@ -276,7 +259,7 @@ def produce_NA(X, p_miss, mecha="MCAR", opt=None, p_obs=None, q=None):
     A dictionnary containing:
     'X_init': the initial data matrix.
     'X_incomp': the data with the generated missing values.
-    'mask': a matrix indexing the generated missing values.s
+    'mask': a matrix indexing the generated missing values.
     """
     # imports tardios: só o teste de imputação precisa de torch / utils
     import torch
@@ -316,14 +299,17 @@ def get_imputer(imp):
         return SimpleImputer(strategy='median')
     elif imp == 'KNN':
         return KNNImputer(n_neighbors=5)
-    elif imp == 'iterative':
-        return IterativeImputer(random_state=42)
     else:
         return SimpleImputer(strategy='mean')
 
 
 def insert_missing_in_df(df, perc, seed=42):
-    """Insere NaNs (MAR) nas features. `seed` torna os NaNs reprodutíveis entre execuções."""
+    """Insere NaNs (MAR) nas features.
+
+    `seed` fixa o gerador do torch. A escolha das colunas sempre observadas em
+    utils.MAR_mask usa np.random, que não é fixado aqui; por isso os NaNs podem
+    variar entre execuções.
+    """
     import torch
     torch.manual_seed(seed)
 

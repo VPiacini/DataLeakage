@@ -29,7 +29,12 @@ python main.py imputation
 python main.py feature_selection
 python main.py tuning
 ```
-ou bash run_all_tests.sh
+Ou, para rodar os quatro em sequência:
+
+```bash
+bash scripts/setup_env.sh      # cria o venv e instala o requirements.txt
+bash scripts/run_all_tests.sh
+```
 
 Os resultados são gravados de forma **incremental** em `results/<teste>_results.csv`
 — uma linha por (dataset × algoritmo × repetição × cenário) e demais fatores do
@@ -55,9 +60,8 @@ Todos os parâmetros são opcionais e definidos por variável de ambiente:
 | `ALGS` | `LR,KNN,DT,RF,SVR` | Lista separada por vírgula, ex.: `ALGS=SVR,KNN` |
 | `NUM_TRIALS` | `6` | Repetições por configuração (seeds diferentes) |
 | `N_JOBS` | `-1` | Paralelismo do CV / GridSearchCV (`-1` = todos os núcleos) |
-| `SVR_IMPL` | `linear` | `linear` usa `LinearSVR` (rápido); `libsvm` usa o `SVR(kernel="linear")` original |
+| `SVR_IMPL` | `linear` | `linear` usa `LinearSVR` (rápido); `libsvm` usa o `SVR(kernel="linear")` original. Não afeta o `tuning`, que sempre usa o `SVR` com kernel |
 | `SVR_SCALE_Y` | `1` | Padroniza o alvo dentro do SVR; `0` desliga |
-| `SVR_MAX_ROWS` | `5000` | Teto de linhas para SVR com kernel; `0` remove o teto |
 | `SVR_CACHE_MB` | `1000` | Cache do libsvm, em MB |
 | `RESUME` | `0` | `1` pula blocos já gravados no CSV |
 
@@ -101,9 +105,11 @@ teste (não via `cross_validate`).
 
 ### `tuning`
 `GridSearchCV` **não aninhado** (leak: a mesma partição escolhe os
-hiperparâmetros e reporta o desempenho) contra **validação cruzada aninhada**
-(noleak: 4 folds internos para a busca, 4 externos para avaliar). Ambos usam
-`refit='neg_mean_squared_error'`.
+hiperparâmetros e reporta o desempenho da melhor configuração) contra
+**validação cruzada aninhada** (noleak: 4 folds internos para a busca, 4
+externos para avaliar; a busca interna usa `refit='neg_mean_squared_error'`).
+O tuning sempre usa o dataset completo; para o SVR, a grade testa os kernels
+linear e RBF com o `SVR` do libsvm.
 
 ## Formato dos resultados
 
@@ -139,20 +145,21 @@ Gera, por teste, em `plots/<teste>/`:
 ## Estrutura
 
 ```
-main.py                 ponto de entrada; despacha o teste pedido na linha de comando
-model_utils.py          configuração global, estimadores, métricas, I/O dos resultados
-utils.py                mecanismos de dados faltantes MCAR/MAR/MNAR
-normalization.py        experimento de normalização
-imputation.py           experimento de imputação
-feature_selection.py    experimento de seleção de atributos
-tuning.py               experimento de ajuste de hiperparâmetros
-analyze_results.py      leitura dos CSVs e geração de gráficos e tabelas
-results/                CSVs gerados (ignorados pelo git)
-plots/                  gráficos gerados (ignorados pelo git)
+main.py                      ponto de entrada; despacha o teste pedido na linha de comando
+model_utils.py               configuração global, estimadores, métricas, I/O dos resultados
+utils.py                     mecanismos de dados faltantes MCAR/MAR/MNAR
+tests/normalization.py       experimento de normalização
+tests/imputation.py          experimento de imputação
+tests/feature_selection.py   experimento de seleção de atributos
+tests/tuning.py              experimento de ajuste de hiperparâmetros
+analyze_results.py           leitura dos CSVs e geração de gráficos e tabelas
+scripts/                     scripts de apoio (criar o ambiente, rodar os quatro testes)
+results/                     CSVs com os resultados usados no trabalho
+plots/                       gráficos e tabelas resumo usados no trabalho
 ```
 
-`results/` e `plots/` ficam fora do controle de versão: são inteiramente
-reprodutíveis a partir do código e das instruções acima.
+`results/` e `plots/` guardam os resultados da execução descrita no trabalho.
+Rodar os testes de novo sobrescreve os CSVs em `results/`.
 
 ## Créditos
 

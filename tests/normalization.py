@@ -8,7 +8,7 @@ from sklearn.preprocessing import StandardScaler
 
 from model_utils import (
     N_JOBS, NUM_TRIALS, datasets, target_algorithms, fetch_data,
-    build_model, get_scoring, make_dict_mean, limit_rows,
+    build_model, get_scoring, make_dict_mean,
     load_results, already_done, append_and_save, timer, output_path,
 )
 
@@ -24,20 +24,18 @@ def run_normalization_test():
 
     for ds in datasets:
         print("\n TESTING ds: _", ds, "_\n", flush=True)
-        df_full = fetch_data(ds)
+        df = fetch_data(ds)
+        X = df.drop('target', axis=1)
+        y = df['target']
+
+        # COM vazamento: o scaler enxerga o dataset inteiro (antes do CV).
+        # Não depende do algoritmo nem do trial, então é calculado uma única vez.
+        X_scaled = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
 
         for alg in target_algorithms:
             print("alg: ", alg, flush=True)
             if already_done(results, ds=ds, alg=alg):
                 continue
-
-            df = limit_rows(df_full, alg)
-            X = df.drop('target', axis=1)
-            y = df['target']
-
-            # COM vazamento: o scaler enxerga o dataset inteiro (antes do CV).
-            # O resultado não depende do trial, então é calculado uma única vez.
-            X_scaled = pd.DataFrame(StandardScaler().fit_transform(X), columns=X.columns)
 
             rows = []
             with timer(f"{ds}/{alg}"):
